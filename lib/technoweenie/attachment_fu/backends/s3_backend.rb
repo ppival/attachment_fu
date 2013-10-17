@@ -199,7 +199,7 @@ module Technoweenie # :nodoc:
                            :distribution_domain => base.attachment_options[:s3_distribution_domain]}
           else
             @@s3_config_path = base.attachment_options[:s3_config_path] || (RAILS_ROOT + '/config/amazon_s3.yml')
-            @@s3_config = @@s3_config = YAML.load(ERB.new(File.read(@@s3_config_path)).result)[RAILS_ENV].symbolize_keys
+            @@s3_config = @@s3_config = YAML.load(ERB.new(File.read(@@s3_config_path)).result)[ENV['RAILS_ENV']].symbolize_keys
           end
 
           Base.establish_connection!(s3_config.slice(:access_key_id, :secret_access_key, :server, :port, :use_ssl, :persistent, :proxy))
