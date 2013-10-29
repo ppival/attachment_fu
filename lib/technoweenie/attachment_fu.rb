@@ -500,32 +500,7 @@ module Technoweenie # :nodoc:
         end
       end
 
-      # if we're not given a specific storage engine, we'll grab one that the attachment actually has, starting with the default.
-      def get_storage_delegator(backend)
-        @attachment_fu_delegators ||= {}
-
-        backends = self.class.attachment_backends
-        if backend.nil?
-          if backends.size == 1
-            backend = backends.keys.first
-          else
-            list = backends.find_all { |a|
-              stored_in?(a[0])
-            }
-            backend = list.map { |k, v| v[:options][:default] ? k : nil }.compact.first
-            if !backend
-              backend = list[0][0]
-            end
-          end
-        end
-
-        hash = backends[backend]
-        @attachment_fu_delegators[backend] ||= hash[:klass].new(self, hash[:options])
-        @attachment_fu_delegators[backend]
-      end
-
       protected
-
         # Generates a unique filename for a Tempfile.
         def random_tempfile_filename
           "#{rand Time.now.to_i}#{filename || 'attachment'}"
@@ -596,6 +571,30 @@ module Technoweenie # :nodoc:
             self._process_attachment
           end
           true
+        end
+
+        # if we're not given a specific storage engine, we'll grab one that the attachment actually has, starting with the default.
+        def get_storage_delegator(backend)
+          @attachment_fu_delegators ||= {}
+
+          backends = self.class.attachment_backends
+          if backend.nil?
+            if backends.size == 1
+              backend = backends.keys.first
+            else
+              list = backends.find_all { |a|
+                stored_in?(a[0])
+              }
+              backend = list.map { |k, v| v[:options][:default] ? k : nil }.compact.first
+              if !backend
+                backend = list[0][0]
+              end
+            end
+          end
+
+          hash = backends[backend]
+          @attachment_fu_delegators[backend] ||= hash[:klass].new(self, hash[:options])
+          @attachment_fu_delegators[backend]
         end
 
         def on_one_store(method, backend, *args)
