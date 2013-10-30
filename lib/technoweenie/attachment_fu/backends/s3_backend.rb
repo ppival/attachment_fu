@@ -368,8 +368,8 @@ module Technoweenie # :nodoc:
 
           old_full_filename = File.join(base_path, @old_filename)
 
-          o = bucket.objects[full_filename]
-          o.rename_to(old_full_filename)
+          o = bucket.objects[old_full_filename]
+          o.rename_to(full_filename)
 
           @old_filename = nil
           true
