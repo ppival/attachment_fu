@@ -286,7 +286,7 @@ module Technoweenie # :nodoc:
         # The optional thumbnail argument will output the thumbnail's filename (if any).
         def s3_url(thumbnail = nil)
           # leave out the port if redundant
-          if ( s3_config[:use_ssl] and s3_port_string.to_s == 443 ) or ( not s3_config[:use_ssl] and s3_port_string.to_s == 80 )
+          if ( s3_config[:use_ssl] && s3_port_string.to_s == '443' ) || ( ! s3_config[:use_ssl] && s3_port_string.to_s == '80' )
             port_string = ''
           else
             port_string = ':' + s3_port_string 
