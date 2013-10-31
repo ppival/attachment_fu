@@ -174,6 +174,8 @@ module Technoweenie # :nodoc:
 
         attr_accessor :s3_config
         attr_reader :bucket_name
+        
+        @@s3_config_path = nil
 
         def initialize(obj, opts)
           # zendesk classic rails usage note
@@ -192,6 +194,10 @@ module Technoweenie # :nodoc:
 
             self.s3_config = opts
           end
+          
+          # :use_ssl defaults to true now in AWS::SDK
+          # the rest of our code relies on checking for this value in s3_config
+          s3_config[:use_ssl] = true unless s3_config.has_key?(:use_ssl)
 
           @bucket_name = self.s3_config[:bucket_name]
 
@@ -279,7 +285,13 @@ module Technoweenie # :nodoc:
         #
         # The optional thumbnail argument will output the thumbnail's filename (if any).
         def s3_url(thumbnail = nil)
-          File.join(s3_protocol + s3_hostname + ':' + s3_port_string, bucket_name, full_filename(thumbnail))
+          # leave out the port if redundant
+          if ( s3_config[:use_ssl] && s3_port_string.to_s == '443' ) || ( ! s3_config[:use_ssl] && s3_port_string.to_s == '80' )
+            port_string = ''
+          else
+            port_string = ':' + s3_port_string 
+          end
+          File.join(s3_protocol + bucket_name + '.' + s3_hostname + port_string, full_filename(thumbnail))
         end
 
         # All public objects are accessible via a GET request to CloudFront. You can generate a
@@ -356,8 +368,8 @@ module Technoweenie # :nodoc:
 
           old_full_filename = File.join(base_path, @old_filename)
 
-          o = bucket.objects[full_filename]
-          o.rename_to(old_full_filename)
+          o = bucket.objects[old_full_filename]
+          o.rename_to(full_filename)
 
           @old_filename = nil
           true
