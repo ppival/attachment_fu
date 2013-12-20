@@ -652,6 +652,32 @@ module Technoweenie # :nodoc:
           end
         end
 
+        def process_stores
+          with_each_store do |store|
+            name = store.attachment_options[:store_name]
+
+            if stores.include?(name)
+              # if we've only got one store, don't bother with fancy-pants logic.  Just raise on failure.
+              if stores.size == 1
+                store.save_to_storage
+              else
+                begin
+                  Timeout.timeout(store.attachment_options[:timeout]) {
+                    store.save_to_storage
+                  }
+                rescue Exception => e
+                  logger.error("Exception saving #{self.filename} to #{name}: #{e.inspect}")
+                  new_stores = stores.reject { |s| s == name.to_sym }.join(",")
+                  write_attribute(:stores, new_stores)
+                  self.class.update_all({:stores => new_stores}, ["id = ?", self.id])
+                end
+              end
+            elsif stores_was && to_store_list(stores_was).include?(name) && store.current_data # needs a delete
+              store.destroy_file
+            end
+          end
+          @stores_processed = true
+        end
 
         # Cleans up after processing.  Thumbnails are created, the attachment is stored to the backend, and the temp_paths are cleared.
         def after_process_attachment
@@ -663,29 +689,7 @@ module Technoweenie # :nodoc:
               attachment_options[:thumbnails].each { |suffix, size| create_or_update_thumbnail(temp_file, suffix, *size) }
             end
 
-            with_each_store do |store|
-              name = store.attachment_options[:store_name]
-
-              if stores.include?(name)
-                # if we've only got one store, don't bother with fancy-pants logic.  Just raise on failure.
-                if stores.size == 1
-                  store.save_to_storage
-                else
-                  begin
-                    Timeout.timeout(store.attachment_options[:timeout]) {
-                      store.save_to_storage
-                    }
-                  rescue Exception => e
-                    logger.error("Exception saving #{self.filename} to #{name}: #{e.inspect}")
-                    new_stores = stores.reject { |s| s == name.to_sym }.join(",")
-                    write_attribute(:stores, new_stores)
-                    self.class.update_all({:stores => new_stores}, ["id = ?", self.id])
-                  end
-                end
-              elsif stores_was && to_store_list(stores_was).include?(name) && store.current_data # needs a delete
-                store.destroy_file
-              end
-            end
+            process_stores unless @stores_processed
 
             @temp_paths.clear
             @saved_attachment = nil
