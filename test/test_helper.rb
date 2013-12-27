@@ -1,11 +1,16 @@
-require 'rubygems'
-require 'bundler'
-Bundler.setup
+require 'bundler/setup'
 
 ENV['RAILS_ENV'] = 'test'
 
-# to-do: strip from rails 3 tests
-RAILS_ROOT=File.expand_path("..", File.dirname(__FILE__))
+module Rails
+  def self.root
+    Bundler.root.join("test")
+  end
+
+  def self.logger
+    @logger ||= Logger.new($stdout)
+  end
+end
 
 require 'test/unit'
 require 'active_support'
