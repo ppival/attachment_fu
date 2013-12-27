@@ -19,10 +19,6 @@ require 'attachment_fu'
 require 'mocha/setup'
 require 'logger'
 
-require "minitest/reporters"
-MiniTest::Reporters.use!
-
-
 config = YAML::load(IO.read(File.dirname(__FILE__) + '/database.yml'))
 ActiveRecord::Base.logger = Logger.new(File.dirname(__FILE__) + "/debug.log")
 
