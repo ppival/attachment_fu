@@ -1,11 +1,16 @@
-require 'rubygems'
-require 'bundler'
-Bundler.setup
+require 'bundler/setup'
 
 ENV['RAILS_ENV'] = 'test'
 
-# to-do: strip from rails 3 tests
-RAILS_ROOT=File.expand_path("..", File.dirname(__FILE__))
+module Rails
+  def self.root
+    Bundler.root.join("test")
+  end
+
+  def self.logger
+    @logger ||= Logger.new($stdout)
+  end
+end
 
 require 'test/unit'
 require 'active_support'
@@ -18,10 +23,6 @@ require 'action_controller'
 require 'attachment_fu'
 require 'mocha/setup'
 require 'logger'
-
-require "minitest/reporters"
-MiniTest::Reporters.use!
-
 
 config = YAML::load(IO.read(File.dirname(__FILE__) + '/database.yml'))
 ActiveRecord::Base.logger = Logger.new(File.dirname(__FILE__) + "/debug.log")
