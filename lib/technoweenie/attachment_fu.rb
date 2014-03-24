@@ -680,6 +680,7 @@ module Technoweenie # :nodoc:
         end
 
         def process_stores
+          set_temp_data(current_data) if temp_path.nil?
           with_each_store do |store|
             name = store_name(store)
 
