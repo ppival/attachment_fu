@@ -339,7 +339,7 @@ module Technoweenie # :nodoc:
 
       # Returns true if the attachment data will be written to the storage system on the next save
       def save_attachment?
-        File.file?(temp_path.to_s)
+        File.file?(temp_path.to_s) || @processing_stores
       end
 
       # nil placeholder in case this field is used in a form.
@@ -680,6 +680,7 @@ module Technoweenie # :nodoc:
         end
 
         def process_stores
+          @processing_stores = true
           with_each_store do |store|
             name = store_name(store)
 
@@ -689,6 +690,7 @@ module Technoweenie # :nodoc:
               store.destroy_file if needs_delete?(store, name)
             end
           end
+          @processing_stores = false
           stores
         end
 
