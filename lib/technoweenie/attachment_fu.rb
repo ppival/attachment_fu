@@ -649,7 +649,7 @@ module Technoweenie # :nodoc:
         end
 
 
-        def needs_delete?(store, name)
+        def was_stored_in?(store, name)
           stores_was && to_store_list(stores_was).include?(name) && store.current_data
         end
 
@@ -687,7 +687,7 @@ module Technoweenie # :nodoc:
             if stores.include?(name)
               save_to_storage(store, name)
             else
-              store.destroy_file if needs_delete?(store, name)
+              store.destroy_file if was_stored_in?(store, name)
             end
           end
           stores
