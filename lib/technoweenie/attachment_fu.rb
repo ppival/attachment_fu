@@ -649,6 +649,50 @@ module Technoweenie # :nodoc:
         end
 
 
+        def was_stored_in?(store, name)
+          stores_was && to_store_list(stores_was).include?(name) && store.current_data
+        end
+
+        def handle_saving_exception(name)
+          new_stores = stores.reject { |s| s == name.to_sym }.join(",")
+          write_attribute(:stores, new_stores)
+          self.class.update_all({:stores => new_stores}, ["id = ?", self.id])
+        end
+
+        def save_with_timeout(store)
+          Timeout.timeout(store.attachment_options[:timeout]) do
+            store.save_to_storage
+          end
+        end
+
+        def store_name(store)
+          store.attachment_options[:store_name]
+        end
+
+        def save_to_storage(store, name)
+          begin
+            save_with_timeout(store)
+            name
+          rescue Exception => e
+            logger.error("Exception saving #{self.filename} to #{name}: #{e.inspect}")
+            handle_saving_exception(name)
+          end
+        end
+
+        def process_stores
+          set_temp_data(current_data) if temp_path.nil?
+          with_each_store do |store|
+            name = store_name(store)
+
+            if stores.include?(name)
+              save_to_storage(store, name)
+            else
+              store.destroy_file if was_stored_in?(store, name)
+            end
+          end
+          stores
+        end
+
         # Cleans up after processing.  Thumbnails are created, the attachment is stored to the backend, and the temp_paths are cleared.
         def after_process_attachment
           if @saved_attachment
@@ -659,29 +703,7 @@ module Technoweenie # :nodoc:
               attachment_options[:thumbnails].each { |suffix, size| create_or_update_thumbnail(temp_file, suffix, *size) }
             end
 
-            with_each_store do |store|
-              name = store.attachment_options[:store_name]
-
-              if stores.include?(name)
-                # if we've only got one store, don't bother with fancy-pants logic.  Just raise on failure.
-                if stores.size == 1
-                  store.save_to_storage
-                else
-                  begin
-                    Timeout.timeout(store.attachment_options[:timeout]) {
-                      store.save_to_storage
-                    }
-                  rescue Exception => e
-                    logger.error("Exception saving #{self.filename} to #{name}: #{e.inspect}")
-                    new_stores = stores.reject { |s| s == name.to_sym }.join(",")
-                    write_attribute(:stores, new_stores)
-                    self.class.update_all({:stores => new_stores}, ["id = ?", self.id])
-                  end
-                end
-              elsif stores_was && to_store_list(stores_was).include?(name) && store.current_data # needs a delete
-                store.destroy_file
-              end
-            end
+            process_stores
 
             @temp_paths.clear
             @saved_attachment = nil
