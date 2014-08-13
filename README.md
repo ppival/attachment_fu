@@ -3,7 +3,7 @@ attachment-fu
 
 [![Build Status](https://travis-ci.org/zendesk/attachment_fu.png)](https://travis-ci.org/zendesk/attachment_fu)
 
-attachment_fu is a plugin by Rick Olson (aka technoweenie <http://techno-weenie.net>) and is the successor to acts_as_attachment.  To get a basic run-through of its capabilities, check out Mike Clark's tutorial <http://clarkware.com/cgi/blosxom/2007/02/24#FileUploadFu>.
+attachment_fu is a plugin by Rick Olson (aka technoweenie <http://techno-weenie.net>) and is the successor to acts_as_attachment.  To get a basic run-through of its capabilities, check out Mike Clark's tutorial <http://clarkware.com/cgi/blosxom/2007/02/24#FileUploadFu> <-- dead and gone, can view at https://web.archive.org/web/20070708115930/http://clarkware.com/cgi/blosxom/2007/02/24
 
 
 attachment_fu functionality
